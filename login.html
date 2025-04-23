@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giriş & Kayıt - Ahilik Bilgi Yarışması</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
   <style>
     body {
       background: linear-gradient(45deg, #4a90e2, #9013fe, #f5a623, #d0021b);
@@ -69,6 +72,9 @@
     <p class="text-center mt-2">
       Hesabınız yok mu? <button id="show-register" class="text-blue-500 hover:underline" aria-label="Kayıt ol">Kayıt Ol</button>
     </p>
+    <p class="text-center mt-2">
+      <button id="show-admin-login" class="text-blue-500 hover:underline" aria-label="Yönetici girişi">Yönetici Girişi</button>
+    </p>
   </div>
 
   <!-- Kayıt Paneli -->
@@ -122,13 +128,68 @@
     </p>
   </div>
 
+  <!-- Yönetici Giriş Paneli -->
+  <div id="admin-login-panel" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full fade-in hidden">
+    <h1 class="text-2xl font-bold text-center mb-6">Yönetici Girişi</h1>
+    <div class="mb-4">
+      <label class="block mb-2" for="admin-password">Şifre:</label>
+      <input id="admin-password" type="password" class="w-full p-2 border rounded" placeholder="Yönetici şifresini girin" aria-label="Yönetici şifresi">
+    </div>
+    <button id="admin-login-submit" class="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600 transition" aria-label="Yönetici girişi yap">Giriş Yap</button>
+    <p id="admin-login-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Yanlış şifre!</span>
+    </p>
+    <p class="text-center mt-4">
+      <button id="back-to-login-from-admin" class="text-blue-500 hover:underline" aria-label="Giriş ekranına dön">Giriş Ekranına Dön</button>
+    </p>
+  </div>
+
+  <!-- Yönetici Paneli -->
+  <div id="admin-panel" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full fade-in hidden">
+    <h1 class="text-2xl font-bold text-center mb-6">Yönetici Paneli</h1>
+    <p class="text-center mb-4">Kayıtlı kullanıcılar:</p>
+    <div id="user-list" class="mb-4 max-h-64 overflow-y-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border p-2">Kullanıcı Adı</th>
+            <th class="border p-2">Gmail</th>
+            <th class="border p-2">Kayıt Tarihi</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body"></tbody>
+      </table>
+    </div>
+    <p class="text-center mt-4">
+      <button id="admin-logout" class="text-blue-500 hover:underline" aria-label="Çıkış yap">Çıkış Yap</button>
+    </p>
+  </div>
+
   <script>
+    // Firebase Yapılandırması
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdGvm9PSMDL8Yl_pc90Fe8xNgfRB9GXZc",
+      authDomain: "ahilikbilgiyarismasi-d1c6e.firebaseapp.com",
+      projectId: "ahilikbilgiyarismasi-d1c6e",
+      storageBucket: "ahilikbilgiyarismasi-d1c6e.firebasestorage.app",
+      messagingSenderId: "68032847149",
+      appId: "1:68032847149:web:e49c2df397aeff7b1507a4",
+      measurementId: "G-78NN020HZH"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const loginPanel = document.getElementById('login-panel');
     const registerPanel = document.getElementById('register-panel');
     const forgotPasswordPanel = document.getElementById('forgot-password-panel');
+    const adminLoginPanel = document.getElementById('admin-login-panel');
+    const adminPanel = document.getElementById('admin-panel');
     const loginSubmit = document.getElementById('login-submit');
     const registerSubmit = document.getElementById('register-submit');
     const forgotSubmit = document.getElementById('forgot-submit');
+    const adminLoginSubmit = document.getElementById('admin-login-submit');
+    const adminLogout = document.getElementById('admin-logout');
     const loginUsername = document.getElementById('login-username');
     const loginPassword = document.getElementById('login-password');
     const registerUsername = document.getElementById('register-username');
@@ -136,17 +197,22 @@
     const registerGmail = document.getElementById('register-gmail');
     const forgotUsername = document.getElementById('forgot-username');
     const forgotGmail = document.getElementById('forgot-gmail');
+    const adminPassword = document.getElementById('admin-password');
     const loginError = document.getElementById('login-error');
     const registerError = document.getElementById('register-error');
     const forgotError = document.getElementById('forgot-error');
     const forgotSuccess = document.getElementById('forgot-success');
+    const adminLoginError = document.getElementById('admin-login-error');
     const showRegister = document.getElementById('show-register');
     const showLogin = document.getElementById('show-login');
     const showForgotPassword = document.getElementById('show-forgot-password');
+    const showAdminLogin = document.getElementById('show-admin-login');
     const backToLogin = document.getElementById('back-to-login');
+    const backToLoginFromAdmin = document.getElementById('back-to-login-from-admin');
+    const userTableBody = document.getElementById('user-table-body');
 
     // Panel geçişleri
-    showRegister.addEventListener('click', () => {
+    showReserve.addEventListener('click', () => {
       loginPanel.classList.add('hidden');
       registerPanel.classList.remove('hidden');
       clearErrors();
@@ -164,8 +230,26 @@
       clearErrors();
     });
 
+    showAdminLogin.addEventListener('click', () => {
+      loginPanel.classList.add('hidden');
+      adminLoginPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
     backToLogin.addEventListener('click', () => {
       forgotPasswordPanel.classList.add('hidden');
+      loginPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
+    backToLoginFromAdmin.addEventListener('click', () => {
+      adminLoginPanel.classList.add('hidden');
+      loginPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
+    adminLogout.addEventListener('click', () => {
+      adminPanel.classList.add('hidden');
       loginPanel.classList.remove('hidden');
       clearErrors();
     });
@@ -175,6 +259,7 @@
       registerError.classList.add('hidden');
       forgotError.classList.add('hidden');
       forgotSuccess.classList.add('hidden');
+      adminLoginError.classList.add('hidden');
       loginUsername.classList.remove('error-shake');
       loginPassword.classList.remove('error-shake');
       registerUsername.classList.remove('error-shake');
@@ -182,10 +267,11 @@
       registerGmail.classList.remove('error-shake');
       forgotUsername.classList.remove('error-shake');
       forgotGmail.classList.remove('error-shake');
+      adminPassword.classList.remove('error-shake');
     }
 
     // Kayıt işlemi
-    registerSubmit.addEventListener('click', () => {
+    registerSubmit.addEventListener('click', async () => {
       const username = registerUsername.value.trim();
       const password = registerPassword.value.trim();
       const gmail = registerGmail.value.trim();
@@ -208,80 +294,148 @@
         return;
       }
 
-      // Kullanıcıyı kontrol et
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      if (users.some(user => user.username === username)) {
-        registerError.classList.remove('hidden');
-        registerError.querySelector('span').textContent = 'Bu kullanıcı adı zaten alınmış!';
-        registerUsername.classList.add('error-shake');
-        setTimeout(() => registerUsername.classList.remove('error-shake'), 500);
-        return;
-      }
+      try {
+        // Kullanıcıyı kontrol et
+        const userSnapshot = await db.collection('users').where('username', '==', username).get();
+        if (!userSnapshot.empty) {
+          registerError.classList.remove('hidden');
+          registerError.querySelector('span').textContent = 'Bu kullanıcı adı zaten alınmış!';
+          registerUsername.classList.add('error-shake');
+          setTimeout(() => registerUsername.classList.remove('error-shake'), 500);
+          return;
+        }
 
-      // Kullanıcıyı kaydet
-      users.push({ username, password, gmail });
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('username', username); // Oturum için kullanıcı adını kaydet
-      window.location.href = 'index.html'; // Ana menüye yönlendir
+        // Kullanıcıyı Firestore'a kaydet
+        await db.collection('users').add({
+          username,
+          gmail,
+          password, // Not: Güvenlik için Firebase Authentication önerilir
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        localStorage.setItem('username', username);
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Kayıt hatası:', error);
+        registerError.classList.remove('hidden');
+        registerError.querySelector('span').textContent = 'Kayıt sırasında bir hata oluştu!';
+      }
     });
 
     // Giriş işlemi
-    loginSubmit.addEventListener('click', () => {
+    loginSubmit.addEventListener('click', async () => {
       const username = loginUsername.value.trim();
       const password = loginPassword.value.trim();
 
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const user = users.find(user => user.username === username && user.password === password);
+      try {
+        const userSnapshot = await db.collection('users').where('username', '==', username).where('password', '==', password).get();
+        if (userSnapshot.empty) {
+          loginError.classList.remove('hidden');
+          loginUsername.classList.add('error-shake');
+          loginPassword.classList.add('error-shake');
+          setTimeout(() => {
+            loginUsername.classList.remove('error-shake');
+            loginPassword.classList.remove('error-shake');
+          }, 500);
+          return;
+        }
 
-      if (!user) {
+        localStorage.setItem('username', username);
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Giriş hatası:', error);
         loginError.classList.remove('hidden');
-        loginUsername.classList.add('error-shake');
-        loginPassword.classList.add('error-shake');
-        setTimeout(() => {
-          loginUsername.classList.remove('error-shake');
-          loginPassword.classList.remove('error-shake');
-        }, 500);
-        return;
+        loginError.querySelector('span').textContent = 'Giriş sırasında bir hata oluştu!';
       }
-
-      localStorage.setItem('username', username); // Oturum için kullanıcı adını kaydet
-      window.location.href = 'index.html'; // Ana menüye yönlendir
     });
 
     // Şifremi unuttum işlemi
-    forgotSubmit.addEventListener('click', () => {
+    forgotSubmit.addEventListener('click', async () => {
       const username = forgotUsername.value.trim();
       const gmail = forgotGmail.value.trim();
 
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const user = users.find(user => user.username === username && user.gmail === gmail);
+      try {
+        const userSnapshot = await db.collection('users').where('username', '==', username).where('gmail', '==', gmail).get();
+        if (userSnapshot.empty) {
+          forgotError.classList.remove('hidden');
+          forgotUsername.classList.add('error-shake');
+          forgotGmail.classList.add('error-shake');
+          setTimeout(() => {
+            forgotUsername.classList.remove('error-shake');
+            forgotGmail.classList.remove('error-shake');
+          }, 500);
+          return;
+        }
 
-      if (!user) {
-        forgotError.classList.remove('hidden');
-        forgotUsername.classList.add('error-shake');
-        forgotGmail.classList.add('error-shake');
+        // E-posta gönderimi simülasyonu
+        console.log(`E-posta gönderiliyor: 
+          To: ahilikbilgiyarismasi@gmail.com
+          Subject: Şifre Sıfırlama Talebi
+          Body: Kullanıcı Adı: ${username}, Gmail: ${gmail}`);
+
+        forgotSuccess.classList.remove('hidden');
+        forgotUsername.value = '';
+        forgotGmail.value = '';
         setTimeout(() => {
-          forgotUsername.classList.remove('error-shake');
-          forgotGmail.classList.remove('error-shake');
-        }, 500);
+          forgotPasswordPanel.classList.add('hidden');
+          loginPanel.classList.remove('hidden');
+          clearErrors();
+        }, 3000);
+      } catch (error) {
+        console.error('Hata:', error);
+        forgotError.classList.remove('hidden');
+        forgotError.querySelector('span').textContent = 'Bir hata oluştu!';
+      }
+    });
+
+    // Yönetici girişi
+    adminLoginSubmit.addEventListener('click', () => {
+      const password = adminPassword.value.trim();
+      const adminPassword = 'ozgzngg'; // Daha önce kullandığınız şifre
+
+      if (password !== adminPassword) {
+        adminLoginError.classList.remove('hidden');
+        adminPassword.classList.add('error-shake');
+        setTimeout(() => adminPassword.classList.remove('error-shake'), 500);
         return;
       }
 
-      // E-posta gönderimi simülasyonu
-      console.log(`E-posta gönderiliyor: 
-        To: ahilikbilgiyarismasi@gmail.com
-        Subject: Şifre Sıfırlama Talebi
-        Body: Kullanıcı Adı: ${username}, Gmail: ${gmail}`);
+      adminLoginPanel.classList.add('hidden');
+      adminPanel.classList.remove('hidden');
+      adminPassword.value = '';
+      clearErrors();
 
-      forgotSuccess.classList.remove('hidden');
-      forgotUsername.value = '';
-      forgotGmail.value = '';
-      setTimeout(() => {
-        forgotPasswordPanel.classList.add('hidden');
-        loginPanel.classList.remove('hidden');
-        clearErrors();
-      }, 3000);
+      // Kullanıcıları listele
+      loadUsers();
     });
+
+    // Kullanıcıları yükle
+    async function loadUsers() {
+      userTableBody.innerHTML = '';
+      try {
+        const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
+        if (snapshot.empty) {
+          userTableBody.innerHTML = '<tr><td colspan="3" class="text-center p-2">Kayıtlı kullanıcı bulunamadı.</td></tr>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const user = doc.data();
+          const createdAt = user.createdAt ? user.createdAt.toDate().toLocaleString() : 'Bilinmiyor';
+          const row = `
+            <tr>
+              <td class="border p-2">${user.username}</td>
+              <td class="border p-2">${user.gmail}</td>
+              <td class="border p-2">${createdAt}</td>
+            </tr>
+          `;
+          userTableBody.innerHTML += row;
+        });
+      } catch (error) {
+        console.error('Kullanıcılar yüklenirken hata:', error);
+        userTableBody.innerHTML = '<tr><td colspan="3" class="text-center p-2 text-red-500">Kullanıcılar yüklenemedi!</td></tr>';
+      }
+    }
   </script>
 </body>
 </html>
