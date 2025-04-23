@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ahilik Bilgi Yarışması</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(45deg, #4a90e2, #9013fe, #f5a623, #d0021b);
+      background-size: 400%;
+      animation: gradientBG 15s ease infinite;
+      font-family: 'Arial', sans-serif;
+      touch-action: manipulation;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .theme-dark {
+      background: linear-gradient(45deg, #1a1a1a, #2c3e50, #34495e, #7f8c8d);
+    }
+
+    .theme-osmanli {
+      background: linear-gradient(45deg, #a93226, #154360, #7d6608, #641e16);
+    }
+
+    .theme-minimal {
+      background: linear-gradient(45deg, #f7fafc, #edf2f7, #e2e8f0, #cbd5e0);
+    }
+
+    .theme-retro {
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ce82);
+    }
+
+    #question {
+      animation: slideIn 0.5s ease-in-out;
+    }
+
+    .option-btn {
+      transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
+      touch-action: manipulation;
+    }
+
+    .option-btn:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .option-btn:active {
+      transform: scale(0.95);
+    }
+
+    .option-btn.correct {
+      box-shadow: 0 0 15px rgba(40, 167, 69, 0.8);
+      animation: glow 0.5s ease-in-out;
+    }
+
+    .option-btn.incorrect {
+      box-shadow: 0 0 15px rgba(220, 53, 69, 0.8);
+      animation: incorrectAnim 0.5s ease-in-out;
+    }
+
+    #timer {
+      height: 12px;
+      background: #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #timer-bar {
+      height: 100%;
+      background: #4a90e2;
+      transition: background-color 0.3s, width 0.1s;
+    }
+
+    #timer-bar.low {
+      animation: pulseTimer 0.5s infinite;
+    }
+
+    #timer-text {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #fff;
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
+
+    @keyframes timer {
+      0% { width: 100%; }
+      100% { width: 0%; }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(40, 167, 69, 1); }
+      100% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); }
+    }
+
+    @keyframes correctAnim {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); background-color: #28a745; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes incorrectAnim {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-15px); }
+      50% { transform: translateX(15px); }
+      75% { transform: translateX(-15px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulseTimer {
+      0% { transform: scaleY(1); }
+      50% { transform: scaleY(1.2); }
+      100% { transform: scaleY(1); }
+    }
+
+    @keyframes scorePop {
+      0% { transform: scale(0.7); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes countdownPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.5); opacity: 1; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    @keyframes titleFlash {
+      0% { opacity: 0; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes rotateBadge {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #title-badge {
+      animation: rotateBadge 2s linear infinite;
+    }
+
+    @media (max-width: 640px) {
+      .option-btn {
+        padding: 16px;
+        font-size: 18px;
+      }
+      #quiz-container, #main-menu, #username-panel, #settings-modal, #leaderboard-modal, #multiplayer-panel, #updates-modal, #add-question-modal, #password-modal {
+        max-width: 95%;
+      }
+      #question {
+        font-size: 1.1rem;
+      }
+      h1, h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    button:focus, input:focus, select:focus {
+      outline: 3px solid #4a90e2;
+      outline-offset: 2px;
+    }
+
+    .error-shake {
+      animation: incorrectAnim 0.5s ease-in-out;
+    }
+
+    .top-buttons {
+      position: fixed;
+      top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+
+    .updates-btn, .add-question-btn {
+      background: linear-gradient(to right, #8b5cf6, #ec4899);
+      color: white;
+      padding: 8px;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .updates-btn:hover, .add-question-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .left-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .right-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .share-btn, .settings-btn {
+      padding: 8px;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .share-btn {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .settings-btn {
+      background: #e5e7eb;
+    }
+
+    .share-btn:hover, .settings-btn:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center h-screen theme-classic">
+  <div class="top-buttons">
+    <div class="left-buttons">
+      <button id="updates-btn" class="updates-btn" aria-label="Güncellemeler">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </button>
+      <button id="add-question-btn" class="add-question-btn" aria-label="Soru Ekle">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="right-buttons">
+      <button id="share-site-btn" class="share-btn" aria-label="Siteyi paylaş">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+        </svg>
+      </button>
+      <button id="settings-btn" class="settings-btn" aria-label="Ayarlar">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37zM15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="main-menu" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out] hidden relative">
+    <h1 id="welcome-text" class="text-2xl font-bold text-center mb-6">Ahilik Bilgi Yarışmasına Hoş Geldiniz!</h1>
+    <button id="start-btn" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 pulse" aria-label="Tek oyunculu mod">Başla</button>
+    <button id="multiplayer-btn" class="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600 mt-2 pulse" aria-label="Çok oyunculu mod">Çok Oyunculu</button>
+    <button id="leaderboard-btn" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 mt-2 pulse" aria-label="Liderlik tablosu">Liderlik Tablosu</button>
+  </div>
+
+  <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out]">
+      <h2 class="text-xl font-bold mb-4">Ayarlar</h2>
+      <div class="mb-4">
+        <label class="block mb-2">Arka Plan Müziği Seviyesi:</label>
+        <input id="music-volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-full" aria-label="Müzik ses seviyesi">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">Efekt Sesi Seviyesi:</label>
+        <input id="effect-volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-full" aria-label="Efekt ses seviyesi">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">Sesi Kapat:</label>
+        <input id="mute-checkbox" type="checkbox" aria-label="Sesi kapat">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">Tema:</label>
+        <select id="theme-selector" class="w-full p-2 border rounded" aria-label="Tema seç">
+          <option value="classic">Klasik</option>
+          <option value="dark">Karanlık</option>
+          <option value="osmanli">Osmanlı</option>
+          <option value="minimal">Minimal</option>
+          <option value="retro">Retro</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <h3 class="font-semibold">En Yüksek Rekor</h3>
+        <p id="high-score">Skor: 0</p>
+        <p id="high-score-time">Süre: 0 saniye</p>
+      </div>
+	  <button id="settings-menu-btn" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 pulse mb-2" aria-label="Ana Menüye Dön">Ana Menüye Dön</button>
+      <button id="logout-btn" class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 pulse mb-2" aria-label="Çıkış yap">Çıkış Yap</button>
+      <button id="close-settings" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 pulse" aria-label="Ayarları kapat">Kapat</button>
+    </div>
+  </div>
+
+  <div id="updates-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out]">
+      <h2 class="text-xl font-bold mb-4 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">Güncellemeler</h2>
+      <div id="updates-list" class="mb-4 max-h-60 overflow-y-auto"></div>
+      <button id="close-updates" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 pulse" aria-label="Güncellemeleri kapat">Kapat</button>
+    </div>
+  </div>
+
+  <div id="leaderboard-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out]">
+      <h2 class="text-xl font-bold mb-4">Liderlik Tablosu</h2>
+      <div id="leaderboard-list" class="mb-4 max-h-60 overflow-y-auto"></div>
+      <button id="reset-leaderboard" class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 pulse mb-2" aria-label="Liderlik tablosunu sıfırla">Tabloyu Sıfırla</button>
+      <button id="close-leaderboard" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 pulse" aria-label="Liderlik tablosunu kapat">Kapat</button>
+    </div>
+  </div>
+
+  <div id="multiplayer-panel" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out] hidden">
+    <h1 class="text-2xl font-bold text-center mb-6">Çok Oyunculu Mod</h1>
+    <p class="text-center mb-4">İkinci oyuncunun kullanıcı adını girin:</p>
+    <input id="player2-input" type="text" class="w-full p-2 mb-4 border rounded" placeholder="En az 3 karakter (harf/rakam)" aria-label="İkinci oyuncu adı" aria-describedby="player2-error">
+    <button id="multiplayer-submit" class="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600 pulse mb-2" aria-label="Çok oyunculu modu başlat">Başlat</button>
+    <button id="multiplayer-back" class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 pulse" aria-label="Ana menüye dön">Ana Menüye Dön</button>
+    <p id="player2-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Lütfen geçerli bir kullanıcı adı girin (en az 3 karakter, sadece harf/rakam)!</span>
+    </p>
+  </div>
+
+  <div id="password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out]">
+      <h2 class="text-xl font-bold mb-4">Şifre Girin</h2>
+      <input id="password-input" type="password" class="w-full p-2 mb-4 border rounded" placeholder="Şifreyi girin" aria-label="Şifre" aria-describedby="password-error">
+      <button id="password-submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 pulse" aria-label="Şifreyi gönder">Gönder</button>
+      <p id="password-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Şifre yanlış!</span>
+      </p>
+    </div>
+  </div>
+
+  <div id="add-question-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[fadeIn_1s_ease-in-out]">
+      <h2 class="text-xl font-bold mb-4">Yeni Soru Ekle</h2>
+      <div class="mb-4">
+        <label class="block mb-2">Soru:</label>
+        <input id="new-question" type="text" class="w-full p-2 border rounded" placeholder="Soru metnini girin" aria-label="Soru">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">1. Şık:</label>
+        <input id="option1" type="text" class="w-full p-2 border rounded" placeholder="Birinci şık" aria-label="Birinci şık">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">2. Şık:</label>
+        <input id="option2" type="text" class="w-full p-2 border rounded" placeholder="İkinci şık" aria-label="İkinci şık">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">3. Şık:</label>
+        <input id="option3" type="text" class="w-full p-2 border rounded" placeholder="Üçüncü şık" aria-label="Üçüncü şık">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">4. Şık:</label>
+        <input id="option4" type="text" class="w-full p-2 border rounded" placeholder="Dördüncü şık" aria-label="Dördüncü şık">
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2">Doğru Cevap (0-3):</label>
+        <input id="correct-answer" type="number" min="0" max="3" class="w-full p-2 border rounded" placeholder="Doğru şık indeksi (0-3)" aria-label="Doğru cevap indeksi">
+      </div>
+      <button id="submit-question" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 pulse mb-2" aria-label="Soruyu ekle">Soruyu Ekle</button>
+      <button id="close-add-question" class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 pulse" aria-label="İptal">İptal</button>
+      <p id="question-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Lütfen tüm alanları doldurun ve geçerli bir doğru cevap indeksi girin!</span>
+      </p>
+    </div>
+  </div>
+
+  <div id="quiz-container" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full animate-[zoomIn_0.5s_ease-in-out] hidden">
+    <h1 class="text-2xl font-bold text-center mb-6 animate-[zoomIn_0.5s_ease-in-out]">Ahilik Bilgi Yarışması</h1>
+    <div id="current-player" class="text-center mb-4 font-semibold" aria-live="polite"></div>
+    <div id="timer" class="mb-4 relative">
+      <div id="timer-bar"></div>
+      <span id="timer-text">8s</span>
+    </div>
+    <div id="question" class="text-lg mb-4"></div>
+    <div id="options" class="space-y-2"></div>
+    <div id="feedback" class="mt-4 text-center font-semibold" aria-live="assertive"></div>
+    <button id="menu-btn" class="mt-6 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 pulse hidden" aria-label="Ana menüye dön">Ana Menüye Dön</button>
+    <div id="score" class="mt-4 text-center font-semibold"></div>
+    <button id="share-btn" class="mt-4 w-full bg-indigo-500 text-white py-2 rounded hover:bg-indigo-600 pulse hidden" aria-label="Sonuçları paylaş">Sonuçları Paylaş</button>
+  </div>
+
+  <div id="countdown" class="fixed inset-0 flex items-center justify-center text-6xl font-bold hidden"></div>
+
+  <div id="title-screen" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden">
+    <div class="text-white text-4xl font-bold text-center animate-[titleFlash_1s_ease-in-out] flex flex-col items-center">
+      <span id="title-text"></span>
+      <img id="title-badge" class="mt-4 w-24 h-24" alt="Ünvan rozeti">
+    </div>
+  </div>
+
+  <audio id="background-music" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="correct-sound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="incorrect-sound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="start-sound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="click-sound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2569/2569-preview.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="victory-sound">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+  </audio>
+  <div id="producer-text" style="position: fixed; bottom: 10px; right: 10px; font-size: 0.7rem; font-weight: bold; z-index: 1000;">Yapımcı: ÖZGÜR ZENGİN</div>
+  <script>
+    let questions = [
+      {
+        question: "Ahilik teşkilatının kurucusu kimdir?",
+        options: ["Ahi Evran", "Hacı Bektaş Veli", "Mevlana", "Yunus Emre"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte 'yamak' ne anlama gelir?",
+        options: ["Usta", "Çırak", "Kalfa", "Tüccar"],
+        correct: 1
+      },
+      {
+        question: "Ahilik hangi yüzyılda kurulmuştur?",
+        options: ["10. yüzyıl", "11. yüzyıl", "13. yüzyıl", "15. yüzyıl"],
+        correct: 2
+      },
+      {
+        question: "Ahilikte 'Fütüvvet' neyi ifade eder?",
+        options: ["Ticaret", "Cömertlik ve yiğitlik", "Sanat", "Eğitim"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın uyması gereken ahlaki kurallar hangi belgede yazılıdır?",
+        options: ["Fütüvvetname", "Mesnevi", "Divan", "Kanunname"],
+        correct: 0
+      },
+      {
+        question: "Ahilik teşkilatının merkezi hangi şehirde bulunuyordu?",
+        options: ["Konya", "Kırşehir", "Ankara", "Bursa"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'Şed kuşanma' neyi ifade eder?",
+        options: ["Çıraklığa kabul", "Kalfalığa geçiş", "Ustalık töreni", "Esnaf birliğine katılım"],
+        correct: 2
+      },
+      {
+        question: "Ahilikte esnafın dürüstlüğünü denetleyen kişi kimdir?",
+        options: ["Yiğitbaşı", "Ahi Baba", "Nakib", "Şeyh"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'orta sandığı' ne için kullanılırdı?",
+        options: ["Eğitim", "Yardımlaşma", "Ticaret", "Cezalar"],
+        correct: 1
+      },
+      {
+        question: "Ahilik teşkilatının Osmanlı Devleti'ndeki devamı hangi lonca sistemiyle ilişkilidir?",
+        options: ["Tüccar Loncaları", "Esnaf Loncaları", "Sanatkar Loncaları", "Ziraat Loncaları"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'Ahi Baba' neyi temsil eder?",
+        options: ["Esnaf lideri", "Çırak eğitmeni", "Tüccar temsilcisi", "Dini lider"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte çırakların eğitiminde hangi değer ön plandadır?",
+        options: ["Zenginlik", "Ahlak", "Hız", "Yenilik"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'kalfa' hangi aşamayı temsil eder?",
+        options: ["Başlangıç", "Orta seviye", "Ustalık", "Liderlik"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın ürün kalitesini kim denetlerdi?",
+        options: ["Yiğitbaşı", "Ahi Baba", "Nakib", "Muhtesib"],
+        correct: 3
+      },
+      {
+        question: "Ahilik teşkilatı hangi medeniyetten etkilenmiştir?",
+        options: ["Bizans", "Selçuklu", "Moğol", "Arap"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'zaviye' ne anlama gelir?",
+        options: ["Ticaret merkezi", "Eğitim ve misafirhane", "İbadethane", "Pazar yeri"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın birbirine yardım etmesi hangi ilkeye dayanır?",
+        options: ["Rekabet", "Dayanışma", "Bağımsızlık", "Kâr"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'Feta' kimlere denirdi?",
+        options: ["Yaşlı esnaflar", "Genç yiğitler", "Ustalar", "Çıraklar"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte hangi meslek grubu öncelikle örgütlenmiştir?",
+        options: ["Çiftçiler", "Dericiler", "Demirciler", "Tüccarlar"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'nakib' ne görev yapardı?",
+        options: ["Eğitim", "Denetim", "Ticaret", "Liderlik"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın uyması gereken kaç temel ilke vardır?",
+        options: ["3", "5", "7", "9"],
+        correct: 2
+      },
+      {
+        question: "Ahilikte 'gedik' neyi ifade eder?",
+        options: ["Dükkan açma hakkı", "Ustalık belgesi", "Çırak maaşı", "Esnaf birliği"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte hangi hayvan sembolik olarak kullanılmıştır?",
+        options: ["Aslan", "Kartal", "Koyun", "At"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte esnafın müşteriye karşı temel görevi nedir?",
+        options: ["Hızlı hizmet", "Dürüstlük", "Ucuzluk", "Yenilik"],
+        correct: 1
+      },
+      {
+        question: "Ahilik teşkilatının sosyal yardımlaşma fonu nedir?",
+        options: ["Orta sandığı", "Zaviye", "Fütüvvetname", "Gedik"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte 'yiğitbaşı' kimdir?",
+        options: ["Esnaf lideri", "Çırak temsilcisi", "Genç esnaf lideri", "Denetçi"],
+        correct: 2
+      },
+      {
+        question: "Ahilikte usta-çırak ilişkisi hangi ilkeye dayanır?",
+        options: ["Rekabet", "Saygı ve disiplin", "Bağımsızlık", "Kâr paylaşımı"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın dükkan açması için ne gerekliydi?",
+        options: ["Zenginlik", "Ustalık belgesi", "Ticaret izni", "Gedik"],
+        correct: 3
+      },
+      {
+        question: "Ahilikte 'helalleşme' neyi ifade eder?",
+        options: ["Ticaret anlaşması", "Borç ödeme", "Hak yemeği telafi etme", "Eğitim"],
+        correct: 2
+      },
+      {
+        question: "Ahilik teşkilatının çöküşü hangi dönemde hızlanmıştır?",
+        options: ["Selçuklu", "Osmanlı", "Tanzimat", "Cumhuriyet"],
+        correct: 2
+      },
+      {
+        question: "Ahilikte esnafın hangi özelliği en çok vurgulanır?",
+        options: ["Zenginlik", "Dürüstlük", "Hız", "Yaratıcılık"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'peştemal' neyi sembolize eder?",
+        options: ["Ustalık", "Çıraklık", "Kalfalık", "Esnaf birliği"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte esnafın topluma karşı sorumluluğu nedir?",
+        options: ["Kâr elde etme", "Kaliteli hizmet", "Rekabet", "Bağımsızlık"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte hangi ilke esnafın müşteriyle ilişkisini düzenler?",
+        options: ["Adalet", "Hız", "Kâr", "Rekabet"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte 'meslek sırrı' ne anlama gelir?",
+        options: ["Ticari sır", "Ustalık bilgisi", "Esnaf dayanışması", "Müşteri gizliliği"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın eğitimi hangi kurumda yapılırdı?",
+        options: ["Medrese", "Zaviye", "Mescit", "Saray"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'terbiye' neyi ifade eder?",
+        options: ["Cezalandırma", "Eğitim ve ahlak", "Ticaret", "Yardımlaşma"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın hangi davranışı yasaktı?",
+        options: ["Yardımlaşma", "Hile yapma", "Eğitim", "Ticaret"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'esnaf şeyhi' kimdir?",
+        options: ["Esnaf lideri", "Çırak eğitmeni", "Denetçi", "Tüccar"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte hangi değer esnafın birliğini güçlendirirdi?",
+        options: ["Rekabet", "Dayanışma", "Bağımsızlık", "Kâr"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın dükkan açma izni ne olarak adlandırılırdı?",
+        options: ["Gedik", "Fütüvvet", "Zaviye", "Orta sandığı"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte 'ahi' unvanı kime verilirdi?",
+        options: ["Çıraklara", "Ustalara", "Esnaf liderlerine", "Tüccarlara"],
+        correct: 2
+      },
+      {
+        question: "Ahilikte esnafın hangi özelliği müşteriye güven verirdi?",
+        options: ["Hız", "Dürüstlük", "Zenginlik", "Yenilik"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte hangi tören esnafın ustalığa geçişini kutlardı?",
+        options: ["Şed kuşanma", "Feta töreni", "Zaviye açılışı", "Gedik töreni"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte esnafın hangi davranışı toplumu güçlendirirdi?",
+        options: ["Rekabet", "Yardımlaşma", "Bağımsızlık", "Kâr odaklılık"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'muhtesib' ne görev yapardı?",
+        options: ["Eğitim", "Denetim", "Ticaret", "Liderlik"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte esnafın hangi ilkeye uyması beklenirdi?",
+        options: ["Hız", "Adalet", "Kâr", "Rekabet"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte 'orta' ne anlama gelir?",
+        options: ["Esnaf birliği", "Ticaret merkezi", "Eğitim kurumu", "Pazar yeri"],
+        correct: 0
+      },
+      {
+        question: "Ahilikte esnafın hangi özelliği topluma örnek olurdu?",
+        options: ["Zenginlik", "Ahlak", "Hız", "Yenilik"],
+        correct: 1
+      },
+      {
+        question: "Ahilikte hangi değer esnafın mesleki gelişimini desteklerdi?",
+        options: ["Rekabet", "Eğitim", "Kâr", "Bağımsızlık"],
+        correct: 1
+      }
+      [
+  {
+    "question": "Ahilikte hangi değer esnafın mesleki gelişimini desteklerdi?",
+    "options": ["Rekabet", "Eğitim", "Kâr", "Bağımsızlık"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilik teşkilatında ustalık belgesi aşağıdakilerden hangisidir?",
+    "options": ["Fütüvvet", "İcazet", "Ahidname", "Gedik"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilikte ahlaki değerlere verilen isim nedir?",
+    "options": ["Hikmet", "Tezhip", "Fütüvvet", "Vakıf"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilik teşkilatının kurucusu kimdir?",
+    "options": ["Hacı Bektaş Veli", "Ahi Evran", "Mevlana", "Yunus Emre"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilik hangi dönemde ortaya çıkmıştır?",
+    "options": ["Osmanlı", "Cumhuriyet", "Selçuklu", "Beylikler"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilikte çıraklıktan kalfalığa geçişte en önemli unsur nedir?",
+    "options": ["Para", "Yaş", "Ahlak", "Aile"],
+    "correct": 2
+  },
+  {
+    "question": "Aşağıdakilerden hangisi Ahilikte sosyal yardımlaşma unsurlarındandır?",
+    "options": ["Zekât", "Sadaka", "Vakıf", "Vergi"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilikte hangi gün iş yerleri kapatılıp toplantılar yapılırdı?",
+    "options": ["Cuma", "Pazar", "Pazartesi", "Perşembe"],
+    "correct": 0
+  },
+  {
+    "question": "Ahilik sisteminin temel amacı nedir?",
+    "options": ["Kâr etmek", "Zengin olmak", "Toplumsal düzen", "Rekabet etmek"],
+    "correct": 2
+  },
+  {
+    "question": "Aşağıdakilerden hangisi Ahiliğin temel ilkelerindendir?",
+    "options": ["Kâr maksimizasyonu", "Çalışan sömürüsü", "Helal kazanç", "Piyasa tekelciliği"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilikte iş yeri açmak isteyen kişiye ne verilirdi?",
+    "options": ["Ruhsat", "Sertifika", "Gedik", "Diploma"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilik hangi alanlarda faaliyet gösterirdi?",
+    "options": ["Sadece ticaret", "Sadece zanaat", "Ticaret ve eğitim", "Ticaret, zanaat, ahlak"],
+    "correct": 3
+  },
+  {
+    "question": "Ahilik hangi felsefi yapıyı esas alır?",
+    "options": ["Materializm", "Fütüvvet", "Rasyonalizm", "Deizm"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilik teşkilatında aşağıdakilerden hangisi yoktur?",
+    "options": ["Çırak", "Patron", "Usta", "Kalfalık"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilikte dayanışmayı sağlayan kurum nedir?",
+    "options": ["Kervansaray", "Lonca", "Medrese", "Tekke"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilikte esnafın fiyat belirleme şekli nasıldır?",
+    "options": ["Serbest piyasa", "Devlet belirler", "Pazarlık", "Ahiler arası ortak karar"],
+    "correct": 3
+  },
+  {
+    "question": "Ahilik sisteminde hangi belgeyle usta olunur?",
+    "options": ["Gedik", "Şahadetname", "İcazetname", "Talimname"],
+    "correct": 2
+  },
+  {
+    "question": "Aşağıdakilerden hangisi Ahilik ilkelerinden biri değildir?",
+    "options": ["Doğruluk", "Yardımlaşma", "Hile", "Güven"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilik anlayışına göre en büyük servet nedir?",
+    "options": ["Altın", "Bilgi", "Mal", "Ticaret"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilikte cezalandırma biçimlerinden biri nedir?",
+    "options": ["Sürgün", "Para cezası", "Toplum dışına çıkarma", "Hapis"],
+    "correct": 2
+  },
+  {
+    "question": "Ahiliğin günümüzdeki karşılığı hangi yapıya benzer?",
+    "options": ["Sendika", "Kooperatif", "Ticaret odası", "Tümünü içerir"],
+    "correct": 3
+  },
+  {
+    "question": "Ahilikte iş etiği en çok hangi kavramla ifade edilir?",
+    "options": ["Kâr", "Sadakat", "Emanet", "Helal kazanç"],
+    "correct": 3
+  },
+  {
+    "question": "Ahi Evran hangi mesleği yapardı?",
+    "options": ["Demircilik", "Dokumacılık", "Marangozluk", "Tüccarlık"],
+    "correct": 1
+  },
+  {
+    "question": "Ahilikte kardeşlik anlamını taşıyan kavram nedir?",
+    "options": ["Uhuvvet", "Fetva", "Vefa", "İnfak"],
+    "correct": 0
+  },
+  {
+    "question": "Ahilikte toplumsal barış nasıl sağlanırdı?",
+    "options": ["Savaş", "Rekabet", "Ahlak", "Zorbalık"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilik sisteminde aşağıdakilerden hangisi esnafa öğretilmezdi?",
+    "options": ["İş ahlakı", "Zanaat", "Ahlak kuralları", "Savaş teknikleri"],
+    "correct": 3
+  },
+  {
+    "question": "Ahilikte 'eline, beline, diline sahip ol' sözü neyi ifade eder?",
+    "options": ["Güç", "Sabır", "Ahlaki disiplin", "Kazanç"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilikte ustalık sınavını geçen kişiye ne denirdi?",
+    "options": ["Reis", "Esnaf", "Usta", "İcazetli"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilik sistemi hangi dinin ahlaki temellerinden etkilenmiştir?",
+    "options": ["Hristiyanlık", "Yahudilik", "İslam", "Budizm"],
+    "correct": 2
+  },
+  {
+    "question": "Ahilik hangi şehirde doğmuştur?",
+    "options": ["Bursa", "Kırşehir", "İstanbul", "Konya"],
+    "correct": 1
+  }
+]
+
+    ];
+
+    // Yerel depolamadan eklenen soruları yükle
+    const storedQuestions = JSON.parse(localStorage.getItem('customQuestions')) || [];
+    questions = questions.concat(storedQuestions);
+
+    let currentQuestion = 0;
+    let score = 0;
+    let correctAnswers = 0;
+    let timer;
+    let username = localStorage.getItem('username') || '';
+    let player2 = '';
+    let startTime;
+    let shuffledQuestions = [];
+    let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+    let highScoreTime = localStorage.getItem('highScoreTime') ? parseInt(localStorage.getItem('highScoreTime')) : 0;
+    let isMultiplayer = false;
+    let currentPlayer = 1;
+    let player1Score = 0;
+    let player2Score = 0;
+    let gameTime = 8;
+    let pointMultiplier = 10;
+    let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+    let player2Answered = false;
+
+    const mainMenu = document.getElementById('main-menu');
+    const welcomeText = document.getElementById('welcome-text');
+    const startBtn = document.getElementById('start-btn');
+    const multiplayerBtn = document.getElementById('multiplayer-btn');
+    const leaderboardBtn = document.getElementById('leaderboard-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const shareSiteBtn = document.getElementById('share-site-btn');
+    const updatesBtn = document.getElementById('updates-btn');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const musicVolumeSlider = document.getElementById('music-volume-slider');
+    const effectVolumeSlider = document.getElementById('effect-volume-slider');
+    const muteCheckbox = document.getElementById('mute-checkbox');
+    const themeSelector = document.getElementById('theme-selector');
+    const highScoreEl = document.getElementById('high-score');
+    const highScoreTimeEl = document.getElementById('high-score-time');
+    const logoutBtn = document.getElementById('logout-btn');
+    const closeSettings = document.getElementById('close-settings');
+    const updatesModal = document.getElementById('updates-modal');
+    const updatesList = document.getElementById('updates-list');
+    const closeUpdates = document.getElementById('close-updates');
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const leaderboardList = document.getElementById('leaderboard-list');
+    const closeLeaderboard = document.getElementById('close-leaderboard');
+    const resetLeaderboard = document.getElementById('reset-leaderboard');
+    const multiplayerPanel = document.getElementById('multiplayer-panel');
+    const player2Input = document.getElementById('player2-input');
+    const multiplayerSubmit = document.getElementById('multiplayer-submit');
+    const multiplayerBack = document.getElementById('multiplayer-back');
+    const player2Error = document.getElementById('player2-error');
+    const passwordModal = document.getElementById('password-modal');
+    const passwordInput = document.getElementById('password-input');
+    const passwordSubmit = document.getElementById('password-submit');
+    const passwordError = document.getElementById('password-error');
+    const addQuestionModal = document.getElementById('add-question-modal');
+    const newQuestionInput = document.getElementById('new-question');
+    const option1Input = document.getElementById('option1');
+    const option2Input = document.getElementById('option2');
+    const option3Input = document.getElementById('option3');
+    const option4Input = document.getElementById('option4');
+    const correctAnswerInput = document.getElementById('correct-answer');
+    const submitQuestionBtn = document.getElementById('submit-question');
+    const closeAddQuestionBtn = document.getElementById('close-add-question');
+    const questionError = document.getElementById('question-error');
+    const quizContainer = document.getElementById('quiz-container');
+    const currentPlayerEl = document.getElementById('current-player');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const menuBtn = document.getElementById('menu-btn');
+    const scoreEl = document.getElementById('score');
+    const shareBtn = document.getElementById('share-btn');
+    const countdownEl = document.getElementById('countdown');
+    const titleScreen = document.getElementById('title-screen');
+    const titleText = document.getElementById('title-text');
+    const titleBadge = document.getElementById('title-badge');
+    const backgroundMusic = document.getElementById('background-music');
+    const correctSound = document.getElementById('correct-sound');
+    const incorrectSound = document.getElementById('incorrect-sound');
+    const startSound = document.getElementById('start-sound');
+    const clickSound = document.getElementById('click-sound');
+	const settingsMenuBtn = document.getElementById('settings-menu-btn');
+settingsMenuBtn.addEventListener('click', () => {
+  if (!username || username.trim().length < 3) {
+    alert("Lütfen geçerli bir kullanıcı adı giriniz!");
+    try { incorrectSound.play(); } catch (e) {}
+    return;
+  }
+
+  // Oyunu sıfırla ve ana menüye dön
+  currentQuestion = 0;
+  score = 0;
+  correctAnswers = 0;
+  player1Score = 0;
+  player2Score = 0;
+  player2Answered = false;
+  currentPlayer = 1;
+  clearInterval(timer);
+  optionsEl.innerHTML = '';
+  questionEl.textContent = '';
+  feedbackEl.textContent = '';
+  scoreEl.textContent = '';
+  currentPlayerEl.textContent = '';
+
+  quizContainer.classList.add('hidden');
+  multiplayerPanel.classList.add('hidden');
+  settingsModal.classList.add('hidden');
+  mainMenu.classList.remove('hidden');
+
+  try { clickSound.play(); } catch (e) {}
+});
+
+    const victorySound = document.getElementById('victory-sound');
+    const timerBar = document.getElementById('timer-bar');
+    const timerText = document.getElementById('timer-text');
+
+    function playBackgroundMusic() {
+      try {
+        if (backgroundMusic.readyState >= 2) {
+          backgroundMusic.volume = muteCheckbox.checked ? 0 : musicVolumeSlider.value;
+          backgroundMusic.play().catch(e => {
+            console.error('Müzik oynatma hatası:', e);
+            document.addEventListener('click', () => {
+              backgroundMusic.play().catch(err => console.error('Tekrar oynatma hatası:', err));
+            }, { once: true });
+          });
+        } else {
+          backgroundMusic.addEventListener('canplay', () => {
+            backgroundMusic.volume = muteCheckbox.checked ? 0 : musicVolumeSlider.value;
+            backgroundMusic.play().catch(e => console.error('Yükleme sonrası oynatma hatası:', e));
+          }, { once: true });
+        }
+      } catch (e) {
+        console.error('Müzik başlatma hatası:', e);
+      }
+    }
+
+
+    document.addEventListener('click', playBackgroundMusic, { once: true });
+
+    const updates = [
+      {
+        version: "1.0.0",
+        content: [
+          "Oyun ilk sürümüyle yayınlandı!",
+          "30 soruluk Ahilik temalı bilgi yarışması.",
+          "Tek oyunculu ve çok oyunculu modlar eklendi.",
+          "Liderlik tablosu ve ayarlar menüsü.",
+          "Demo Sürümüdür."
+        ]
+      }
+    ];
+
+    function renderUpdates() {
+      updatesList.innerHTML = '';
+      updates.forEach(update => {
+        const div = document.createElement('div');
+        div.className = 'py-2 border-b cursor-pointer hover:bg-gray-100';
+        div.innerHTML = `<span class="font-semibold text-purple-600">Güncelleme ${update.version}</span>`;
+        div.addEventListener('click', () => {
+          updatesList.innerHTML = `
+            <h3 class="text-lg font-bold mb-2 text-purple-600">Güncelleme ${update.version}</h3>
+            <ul class="list-disc pl-5">
+              ${update.content.map(item => `<li>${item}</li>`).join('')}
+            </ul>
+          `;
+        });
+        updatesList.appendChild(div);
+      });
+    }
+
+    updatesBtn.addEventListener('click', () => {
+      renderUpdates();
+      updatesModal.classList.remove('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    closeUpdates.addEventListener('click', () => {
+      updatesModal.classList.add('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    addQuestionBtn.addEventListener('click', () => {
+      passwordModal.classList.remove('hidden');
+      passwordInput.value = '';
+      passwordError.classList.add('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    passwordSubmit.addEventListener('click', () => {
+      const input = passwordInput.value.trim();
+      if (input === 'ozgzngg') {
+        passwordModal.classList.add('hidden');
+        addQuestionModal.classList.remove('hidden');
+        newQuestionInput.value = '';
+        option1Input.value = '';
+        option2Input.value = '';
+        option3Input.value = '';
+        option4Input.value = '';
+        correctAnswerInput.value = '';
+        questionError.classList.add('hidden');
+        const welcomeEl = document.createElement('div');
+        welcomeEl.textContent = 'Hoşgeldiniz!';
+        welcomeEl.className = 'absolute top-12 right-4 bg-green-500 text-white px-2 py-1 rounded text-sm';
+        mainMenu.appendChild(welcomeEl);
+        setTimeout(() => welcomeEl.remove(), 2000);
+        try {
+          clickSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+      } else {
+        passwordError.classList.remove('hidden');
+        passwordInput.classList.add('error-shake');
+        setTimeout(() => {
+          passwordInput.classList.remove('error-shake');
+          passwordModal.classList.add('hidden');
+          mainMenu.classList.remove('hidden');
+        }, 500);
+        try {
+          incorrectSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+      }
+    });
+
+    submitQuestionBtn.addEventListener('click', () => {
+      const question = newQuestionInput.value.trim();
+      const option1 = option1Input.value.trim();
+      const option2 = option2Input.value.trim();
+      const option3 = option3Input.value.trim();
+      const option4 = option4Input.value.trim();
+      const correct = parseInt(correctAnswerInput.value);
+
+      if (
+        question &&
+        option1 &&
+        option2 &&
+        option3 &&
+        option4 &&
+        !isNaN(correct) &&
+        correct >= 0 &&
+        correct <= 3
+      ) {
+        const newQuestion = {
+          question,
+          options: [option1, option2, option3, option4],
+          correct
+        };
+        const storedQuestions = JSON.parse(localStorage.getItem('customQuestions')) || [];
+        storedQuestions.push(newQuestion);
+        localStorage.setItem('customQuestions', JSON.stringify(storedQuestions));
+        questions.push(newQuestion);
+        addQuestionModal.classList.add('hidden');
+        mainMenu.classList.remove('hidden');
+        const successEl = document.createElement('div');
+        successEl.textContent = 'Soru başarıyla eklendi!';
+        successEl.className = 'absolute top-12 right-4 bg-green-500 text-white px-2 py-1 rounded text-sm';
+        mainMenu.appendChild(successEl);
+        setTimeout(() => successEl.remove(), 2000);
+        try {
+          clickSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+      } else {
+        questionError.classList.remove('hidden');
+        newQuestionInput.classList.add('error-shake');
+        setTimeout(() => newQuestionInput.classList.remove('error-shake'), 500);
+        try {
+          incorrectSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+      }
+    });
+
+    closeAddQuestionBtn.addEventListener('click', () => {
+      addQuestionModal.classList.add('hidden');
+      mainMenu.classList.remove('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    shareSiteBtn.addEventListener('click', () => {
+      const text = 'Ahilik Bilgi Yarışması\'nı keşfet! Bilgini test et ve arkadaşlarınla yarış!';
+      if (navigator.share) {
+        navigator.share({
+          title: 'Ahilik Bilgi Yarışması',
+          text: text,
+          url: window.location.href
+        }).catch(err => console.error('Paylaşım hatası:', err));
+      } else {
+        navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
+          const tempEl = document.createElement('div');
+          tempEl.textContent = 'Link kopyalandı!';
+          tempEl.className = 'absolute top-12 right-4 bg-indigo-500 text-white px-2 py-1 rounded text-sm';
+          mainMenu.appendChild(tempEl);
+          setTimeout(() => tempEl.remove(), 2000);
+        });
+      }
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    multiplayerBack.addEventListener('click', () => {
+      multiplayerPanel.classList.add('hidden');
+      mainMenu.classList.remove('hidden');
+      player2Input.value = '';
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    function updateVolumes() {
+      const musicVolume = muteCheckbox.checked ? 0 : musicVolumeSlider.value;
+      const effectVolume = muteCheckbox.checked ? 0 : effectVolumeSlider.value;
+      backgroundMusic.volume = musicVolume;
+      correctSound.volume = effectVolume;
+      incorrectSound.volume = effectVolume;
+      startSound.volume = effectVolume;
+      clickSound.volume = effectVolume;
+      victorySound.volume = effectVolume;
+    }
+
+    musicVolumeSlider.addEventListener('input', updateVolumes);
+    effectVolumeSlider.addEventListener('input', updateVolumes);
+    muteCheckbox.addEventListener('change', updateVolumes);
+
+    themeSelector.addEventListener('change', () => {
+      document.body.className = `flex items-center justify-center h-screen theme-${themeSelector.value}`;
+      document.body.style.transition = 'background 0.5s ease';
+    });
+
+    function updateHighScore() {
+      highScoreEl.textContent = `Skor: ${highScore}`;
+      highScoreTimeEl.textContent = `Süre: ${highScoreTime} saniye`;
+    }
+
+    updateHighScore();
+
+    logoutBtn.addEventListener('click', () => {
+   localStorage.removeItem('username');
+   username = '';
+   settingsModal.classList.add('hidden');
+   window.location.href = 'login.html'; // login.html sayfasına yönlendir
+   try {
+     clickSound.play();
+   } catch (e) {
+     console.error('Ses oynatma hatası:', e);
+   }
+});
+
+    closeSettings.addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.classList.remove('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    function updateLeaderboard() {
+      leaderboard.sort((a, b) => b.score - a.score);
+      leaderboardList.innerHTML = leaderboard.map((entry, index) => `
+        <div class="flex justify-between py-2 border-b">
+          <span>${index + 1}. ${entry.username}</span>
+          <span>${entry.score}</span>
+        </div>
+      `).join('');
+    }
+
+    leaderboardBtn.addEventListener('click', () => {
+      updateLeaderboard();
+      leaderboardModal.classList.remove('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    closeLeaderboard.addEventListener('click', () => {
+      leaderboardModal.classList.add('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    resetLeaderboard.addEventListener('click', () => {
+      leaderboard = [];
+      localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+      updateLeaderboard();
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    multiplayerBtn.addEventListener('click', () => {
+      mainMenu.classList.add('hidden');
+      multiplayerPanel.classList.remove('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    multiplayerSubmit.addEventListener('click', () => {
+      const input = player2Input.value.trim();
+      if (!/^[a-zA-Z0-9]{3,}$/.test(input)) {
+        player2Error.classList.remove('hidden');
+        player2Input.classList.add('error-shake');
+        setTimeout(() => player2Input.classList.remove('error-shake'), 500);
+        try {
+          incorrectSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+        return;
+      }
+      player2 = input;
+      isMultiplayer = true;
+      multiplayerPanel.classList.add('hidden');
+      startGame();
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function startCountdown(callback) {
+      let count = 3;
+      countdownEl.textContent = count;
+      countdownEl.classList.remove('hidden');
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownEl.textContent = count;
+          countdownEl.classList.add('animate-[countdownPop_0.5s_ease-in-out]');
+          setTimeout(() => countdownEl.classList.remove('animate-[countdownPop_0.5s_ease-in-out]'), 500);
+        } else {
+          clearInterval(interval);
+          countdownEl.classList.add('hidden');
+          callback();
+        }
+      }, 1000);
+    }
+
+    function showQuestion() {
+      const q = shuffledQuestions[currentQuestion];
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = '';
+      q.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn w-full bg-gray-100 p-3 rounded hover:bg-gray-200';
+        btn.textContent = option;
+        btn.addEventListener('click', () => checkAnswer(index));
+        optionsEl.appendChild(btn);
+      });
+      currentPlayerEl.textContent = isMultiplayer ? `Sıra: ${currentPlayer === 1 ? username : player2}` : '';
+      startTimer();
+    }
+
+    function startTimer() {
+      let timeLeft = gameTime;
+      timerText.textContent = `${timeLeft}s`;
+      timerBar.style.width = '100%';
+      timerBar.classList.remove('low');
+      timer = setInterval(() => {
+        timeLeft -= 0.1;
+        timerText.textContent = `${timeLeft.toFixed(1)}s`;
+        timerBar.style.width = `${(timeLeft / gameTime) * 100}%`;
+        if (timeLeft < gameTime / 3) {
+          timerBar.classList.add('low');
+        }
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          checkAnswer(-1);
+        }
+      }, 100);
+    }
+
+    function calculateTitle(accuracy) {
+      if (accuracy <= 14) return { title: 'Yiğit', badge: 'https://via.placeholder.com/100?text=🌟' };
+      if (accuracy <= 28) return { title: 'Çırak', badge: 'https://via.placeholder.com/100?text=🛠️' };
+      if (accuracy <= 42) return { title: 'Yamak', badge: 'https://via.placeholder.com/100?text=🔧' };
+      if (accuracy <= 56) return { title: 'Kalfa', badge: 'https://via.placeholder.com/100?text=🥈' };
+      if (accuracy <= 70) return { title: 'Usta', badge: 'https://via.placeholder.com/100?text=🏅' };
+      if (accuracy <= 85) return { title: 'Ahi', badge: 'https://via.placeholder.com/100?text=👑' };
+      return { title: 'Şeyh', badge: 'https://via.placeholder.com/100?text=🏆' };
+    }
+
+    function checkAnswer(selected) {
+      clearInterval(timer);
+      const q = shuffledQuestions[currentQuestion];
+      const buttons = optionsEl.getElementsByTagName('button');
+      for (let btn of buttons) {
+        btn.disabled = true;
+      }
+      if (selected === q.correct) {
+        buttons[selected].classList.add('correct', 'animate-[correctAnim_0.5s_ease-in-out]');
+        feedbackEl.textContent = 'Doğru!';
+        feedbackEl.className = 'mt-4 text-center font-semibold text-green-500';
+        score += pointMultiplier;
+        correctAnswers++;
+        if (isMultiplayer) {
+          if (currentPlayer === 1) player1Score += pointMultiplier;
+          else player2Score += pointMultiplier;
+        }
+        try {
+          correctSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+      } else {
+        if (selected !== -1) {
+          buttons[selected].classList.add('incorrect', 'animate-[incorrectAnim_0.5s_ease-in-out]');
+        }
+        buttons[q.correct].classList.add('correct', 'animate-[correctAnim_0.5s_ease-in-out]');
+        feedbackEl.textContent = 'Yanlış!';
+        feedbackEl.className = 'mt-4 text-center font-semibold text-red-500';
+        try {
+          incorrectSound.play();
+        } catch (e) {
+          console.error('Ses oynatma hatası:', e);
+        }
+      }
+      scoreEl.textContent = isMultiplayer ? `Skor: ${username}: ${player1Score}, ${player2}: ${player2Score}` : `Skor: ${score}`;
+      currentQuestion++;
+      if (isMultiplayer && !player2Answered) {
+        player2Answered = true;
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        setTimeout(() => {
+          feedbackEl.textContent = '';
+          for (let btn of buttons) {
+            btn.disabled = false;
+            btn.classList.remove('correct', 'incorrect', 'animate-[correctAnim_0.5s_ease-in-out]', 'animate-[incorrectAnim_0.5s_ease-in-out]');
+          }
+          showQuestion();
+        }, 1000);
+      } else if (currentQuestion < shuffledQuestions.length) {
+        player2Answered = false;
+        currentPlayer = 1;
+        setTimeout(() => {
+          feedbackEl.textContent = '';
+          for (let btn of buttons) {
+            btn.disabled = false;
+            btn.classList.remove('correct', 'incorrect', 'animate-[correctAnim_0.5s_ease-in-out]', 'animate-[incorrectAnim_0.5s_ease-in-out]');
+          }
+          showQuestion();
+        }, 1000);
+      } else {
+        setTimeout(endGame, 1000);
+      }
+    }
+
+    function startGame() {
+      currentQuestion = 0;
+      score = 0;
+      correctAnswers = 0;
+      player1Score = 0;
+      player2Score = 0;
+      player2Answered = false;
+      currentPlayer = 1;
+      shuffledQuestions = isMultiplayer ? shuffle([...questions]).slice(0, 10) : shuffle([...questions]).slice(0, 30);
+      quizContainer.classList.remove('hidden');
+      mainMenu.classList.add('hidden');
+      startTime = Date.now();
+      scoreEl.textContent = isMultiplayer ? `Skor: ${username}: 0, ${player2}: 0` : `Skor: 0`;
+      try {
+        startSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+      startCountdown(() => showQuestion());
+    }
+
+    startBtn.addEventListener('click', () => {
+      isMultiplayer = false;
+      startGame();
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    function endGame() {
+      const endTime = Date.now();
+      const timeTaken = Math.round((endTime - startTime) / 1000);
+      if (!isMultiplayer && score > highScore) {
+        highScore = score;
+        highScoreTime = timeTaken;
+        localStorage.setItem('highScore', highScore);
+        localStorage.setItem('highScoreTime', highScoreTime);
+        updateHighScore();
+      }
+      if (!isMultiplayer) {
+        leaderboard.push({ username, score });
+        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+      }
+      let title = '';
+      let badgeSrc = '';
+      if (isMultiplayer) {
+        if (player1Score > player2Score) {
+          title = `${username} Kazandı!`;
+          badgeSrc = 'https://via.placeholder.com/100?text=🏆';
+        } else if (player2Score > player1Score) {
+          title = `${player2} Kazandı!`;
+          badgeSrc = 'https://via.placeholder.com/100?text=🏆';
+        } else {
+          title = 'Berabere!';
+          badgeSrc = 'https://via.placeholder.com/100?text=🤝';
+        }
+      } else {
+        const accuracy = shuffledQuestions.length > 0 ? (correctAnswers / shuffledQuestions.length) * 100 : 0;
+        const titleData = calculateTitle(accuracy);
+        title = titleData.title;
+        badgeSrc = titleData.badge;
+      }
+      titleText.textContent = title;
+      titleBadge.src = badgeSrc;
+      titleScreen.classList.remove('hidden');
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      try {
+        victorySound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+      setTimeout(() => {
+        titleScreen.classList.add('hidden');
+        quizContainer.classList.add('hidden');
+        mainMenu.classList.remove('hidden');
+        menuBtn.classList.remove('hidden');
+        shareBtn.classList.remove('hidden');
+      }, 3000);
+    }
+
+    menuBtn.addEventListener('click', () => {
+      quizContainer.classList.add('hidden');
+      mainMenu.classList.remove('hidden');
+      menuBtn.classList.add('hidden');
+      shareBtn.classList.add('hidden');
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+
+    shareBtn.addEventListener('click', () => {
+      const text = isMultiplayer
+        ? `${username} vs ${player2} maçında skor: ${player1Score} - ${player2Score}! Ahilik Bilgi Yarışması'nda sen de yarış!`
+        : `${username}, Ahilik Bilgi Yarışması'nda ${score} puan aldı! Ünvan: ${calculateTitle((correctAnswers / shuffledQuestions.length) * 100).title}`;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Ahilik Bilgi Yarışması',
+          text: text,
+          url: window.location.href
+        }).catch(err => console.error('Paylaşım hatası:', err));
+      } else {
+        navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
+          const tempEl = document.createElement('div');
+          tempEl.textContent = 'Sonuç kopyalandı!';
+          tempEl.className = 'absolute top-12 right-4 bg-indigo-500 text-white px-2 py-1 rounded text-sm';
+          quizContainer.appendChild(tempEl);
+          setTimeout(() => tempEl.remove(), 2000);
+        });
+      }
+      try {
+        clickSound.play();
+      } catch (e) {
+        console.error('Ses oynatma hatası:', e);
+      }
+    });
+	
+	// Kullanıcı adını localStorage'dan al
+username = localStorage.getItem('username') || 'Misafir';
+mainMenu.classList.remove('hidden');
+welcomeText.textContent = `Hoş Geldin, ${username}!`;
+playBackgroundMusic();
+
+  </script>
+<script>
+  window.onload = function() {
+    // Sayfadaki görünen tüm metni al
+    const bodyText = document.body.innerText;
+
+    // Eğer metin içinde "Misafir!" varsa login.html'e yönlendir
+    if (bodyText.includes("Misafir!")) {
+      window.location.href = "login.html";
+    }
+  };
+</script>
+
+</body>
+</html>
