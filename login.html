@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giriş & Kayıt - Ahilik Bilgi Yarışması</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(45deg, #4a90e2, #9013fe, #f5a623, #d0021b);
+      background-size: 400%;
+      animation: gradientBG 15s ease infinite;
+      font-family: 'Arial', sans-serif;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .error-shake {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    button:focus, input:focus {
+      outline: 3px solid #4a90e2;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+  <!-- Giriş Paneli -->
+  <div id="login-panel" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full fade-in">
+    <h1 class="text-2xl font-bold text-center mb-6">Giriş Yap</h1>
+    <div class="mb-4">
+      <label class="block mb-2" for="login-username">Kullanıcı Adı:</label>
+      <input id="login-username" type="text" class="w-full p-2 border rounded" placeholder="Kullanıcı adınızı girin" aria-label="Kullanıcı adı">
+    </div>
+    <div class="mb-4">
+      <label class="block mb-2" for="login-password">Şifre:</label>
+      <input id="login-password" type="password" class="w-full p-2 border rounded" placeholder="Şifrenizi girin" aria-label="Şifre">
+    </div>
+    <button id="login-submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition" aria-label="Giriş yap">Giriş Yap</button>
+    <p id="login-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Hatalı kullanıcı adı veya şifre!</span>
+    </p>
+    <p class="text-center mt-4">
+      <button id="show-forgot-password" class="text-blue-500 hover:underline" aria-label="Şifremi unuttum">Şifremi Unuttum</button>
+    </p>
+    <p class="text-center mt-2">
+      Hesabınız yok mu? <button id="show-register" class="text-blue-500 hover:underline" aria-label="Kayıt ol">Kayıt Ol</button>
+    </p>
+  </div>
+
+  <!-- Kayıt Paneli -->
+  <div id="register-panel" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full fade-in hidden">
+    <h1 class="text-2xl font-bold text-center mb-6">Kayıt Ol</h1>
+    <div class="mb-4">
+      <label class="block mb-2" for="register-username">Kullanıcı Adı:</label>
+      <input id="register-username" type="text" class="w-full p-2 border rounded" placeholder="En az 3 karakter (harf/rakam)" aria-label="Kullanıcı adı">
+    </div>
+    <div class="mb-4">
+      <label class="block mb-2" for="register-password">Şifre:</label>
+      <input id="register-password" type="password" class="w-full p-2 border rounded" placeholder="En az 6 karakter" aria-label="Şifre">
+    </div>
+    <div class="mb-4">
+      <label class="block mb-2" for="register-gmail">Gmail Adresi:</label>
+      <input id="register-gmail" type="email" class="w-full p-2 border rounded" placeholder="ornek@gmail.com" aria-label="Gmail adresi">
+    </div>
+    <button id="register-submit" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition" aria-label="Kayıt ol">Kayıt Ol</button>
+    <p id="register-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Lütfen tüm alanları doğru doldurun!</span>
+    </p>
+    <p class="text-center mt-4">
+      Zaten hesabınız var mı? <button id="show-login" class="text-blue-500 hover:underline" aria-label="Giriş yap">Giriş Yap</button>
+    </p>
+  </div>
+
+  <!-- Şifremi Unuttum Paneli -->
+  <div id="forgot-password-panel" class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full fade-in hidden">
+    <h1 class="text-2xl font-bold text-center mb-6">Şifremi Unuttum</h1>
+    <p class="text-center mb-4">Hesabınıza bağlı Gmail adresini ve kullanıcı adınızı girin.</p>
+    <div class="mb-4">
+      <label class="block mb-2" for="forgot-username">Kullanıcı Adı:</label>
+      <input id="forgot-username" type="text" class="w-full p-2 border rounded" placeholder="Kullanıcı adınızı girin" aria-label="Kullanıcı adı">
+    </div>
+    <div class="mb-4">
+      <label class="block mb-2" for="forgot-gmail">Gmail Adresi:</label>
+      <input id="forgot-gmail" type="email" class="w-full p-2 border rounded" placeholder="ornek@gmail.com" aria-label="Gmail adresi">
+    </div>
+    <button id="forgot-submit" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition" aria-label="Şifre sıfırlama talebi gönder">Gönder</button>
+    <p id="forgot-error" class="text-red-500 text-center mt-2 hidden flex items-center justify-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Geçersiz kullanıcı adı veya Gmail adresi!</span>
+    </p>
+    <p id="forgot-success" class="text-green-500 text-center mt-2 hidden flex items-center justify-center">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      <span>Talebiniz alındı! En yakın zamanda geri bildirim alacaksınız.</span>
+    </p>
+    <p class="text-center mt-4">
+      <button id="back-to-login" class="text-blue-500 hover:underline" aria-label="Giriş ekranına dön">Giriş Ekranına Dön</button>
+    </p>
+  </div>
+
+  <script>
+    const loginPanel = document.getElementById('login-panel');
+    const registerPanel = document.getElementById('register-panel');
+    const forgotPasswordPanel = document.getElementById('forgot-password-panel');
+    const loginSubmit = document.getElementById('login-submit');
+    const registerSubmit = document.getElementById('register-submit');
+    const forgotSubmit = document.getElementById('forgot-submit');
+    const loginUsername = document.getElementById('login-username');
+    const loginPassword = document.getElementById('login-password');
+    const registerUsername = document.getElementById('register-username');
+    const registerPassword = document.getElementById('register-password');
+    const registerGmail = document.getElementById('register-gmail');
+    const forgotUsername = document.getElementById('forgot-username');
+    const forgotGmail = document.getElementById('forgot-gmail');
+    const loginError = document.getElementById('login-error');
+    const registerError = document.getElementById('register-error');
+    const forgotError = document.getElementById('forgot-error');
+    const forgotSuccess = document.getElementById('forgot-success');
+    const showRegister = document.getElementById('show-register');
+    const showLogin = document.getElementById('show-login');
+    const showForgotPassword = document.getElementById('show-forgot-password');
+    const backToLogin = document.getElementById('back-to-login');
+
+    // Panel geçişleri
+    showRegister.addEventListener('click', () => {
+      loginPanel.classList.add('hidden');
+      registerPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
+    showLogin.addEventListener('click', () => {
+      registerPanel.classList.add('hidden');
+      loginPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
+    showForgotPassword.addEventListener('click', () => {
+      loginPanel.classList.add('hidden');
+      forgotPasswordPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
+    backToLogin.addEventListener('click', () => {
+      forgotPasswordPanel.classList.add('hidden');
+      loginPanel.classList.remove('hidden');
+      clearErrors();
+    });
+
+    function clearErrors() {
+      loginError.classList.add('hidden');
+      registerError.classList.add('hidden');
+      forgotError.classList.add('hidden');
+      forgotSuccess.classList.add('hidden');
+      loginUsername.classList.remove('error-shake');
+      loginPassword.classList.remove('error-shake');
+      registerUsername.classList.remove('error-shake');
+      registerPassword.classList.remove('error-shake');
+      registerGmail.classList.remove('error-shake');
+      forgotUsername.classList.remove('error-shake');
+      forgotGmail.classList.remove('error-shake');
+    }
+
+    // Kayıt işlemi
+    registerSubmit.addEventListener('click', () => {
+      const username = registerUsername.value.trim();
+      const password = registerPassword.value.trim();
+      const gmail = registerGmail.value.trim();
+
+      // Doğrulama
+      const usernameValid = /^[a-zA-Z0-9]{3,}$/.test(username);
+      const passwordValid = password.length >= 6;
+      const gmailValid = /^[^\s@]+@gmail\.com$/.test(gmail);
+
+      if (!usernameValid || !passwordValid || !gmailValid) {
+        registerError.classList.remove('hidden');
+        if (!usernameValid) registerUsername.classList.add('error-shake');
+        if (!passwordValid) registerPassword.classList.add('error-shake');
+        if (!gmailValid) registerGmail.classList.add('error-shake');
+        setTimeout(() => {
+          registerUsername.classList.remove('error-shake');
+          registerPassword.classList.remove('error-shake');
+          registerGmail.classList.remove('error-shake');
+        }, 500);
+        return;
+      }
+
+      // Kullanıcıyı kontrol et
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      if (users.some(user => user.username === username)) {
+        registerError.classList.remove('hidden');
+        registerError.querySelector('span').textContent = 'Bu kullanıcı adı zaten alınmış!';
+        registerUsername.classList.add('error-shake');
+        setTimeout(() => registerUsername.classList.remove('error-shake'), 500);
+        return;
+      }
+
+      // Kullanıcıyı kaydet
+      users.push({ username, password, gmail });
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('username', username); // Oturum için kullanıcı adını kaydet
+      window.location.href = 'index.html'; // Ana menüye yönlendir
+    });
+
+    // Giriş işlemi
+    loginSubmit.addEventListener('click', () => {
+      const username = loginUsername.value.trim();
+      const password = loginPassword.value.trim();
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(user => user.username === username && user.password === password);
+
+      if (!user) {
+        loginError.classList.remove('hidden');
+        loginUsername.classList.add('error-shake');
+        loginPassword.classList.add('error-shake');
+        setTimeout(() => {
+          loginUsername.classList.remove('error-shake');
+          loginPassword.classList.remove('error-shake');
+        }, 500);
+        return;
+      }
+
+      localStorage.setItem('username', username); // Oturum için kullanıcı adını kaydet
+      window.location.href = 'index.html'; // Ana menüye yönlendir
+    });
+
+    // Şifremi unuttum işlemi
+    forgotSubmit.addEventListener('click', () => {
+      const username = forgotUsername.value.trim();
+      const gmail = forgotGmail.value.trim();
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(user => user.username === username && user.gmail === gmail);
+
+      if (!user) {
+        forgotError.classList.remove('hidden');
+        forgotUsername.classList.add('error-shake');
+        forgotGmail.classList.add('error-shake');
+        setTimeout(() => {
+          forgotUsername.classList.remove('error-shake');
+          forgotGmail.classList.remove('error-shake');
+        }, 500);
+        return;
+      }
+
+      // E-posta gönderimi simülasyonu
+      console.log(`E-posta gönderiliyor: 
+        To: ahilikbilgiyarismasi@gmail.com
+        Subject: Şifre Sıfırlama Talebi
+        Body: Kullanıcı Adı: ${username}, Gmail: ${gmail}`);
+
+      forgotSuccess.classList.remove('hidden');
+      forgotUsername.value = '';
+      forgotGmail.value = '';
+      setTimeout(() => {
+        forgotPasswordPanel.classList.add('hidden');
+        loginPanel.classList.remove('hidden');
+        clearErrors();
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
